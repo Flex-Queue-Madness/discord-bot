@@ -1,21 +1,20 @@
 {
-  "name": "fqm",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "run": "node src/index.js",
-    "dev": "nodemon src/index.js"
+  "name": "fqm_discord_bot",
+  "version": "2.0.0",
+  "author": {
+    "name" : "Andreas Grafen",
+    "url" : "https://andreas.grafen.info/"
   },
-  "author": "",
-  "license": "MIT",
+  "main": "src/bot.js",
   "dependencies": {
     "@discordjs/builders": "^1.4.0",
     "@discordjs/rest": "^1.5.0",
     "discord.js": "^14.7.1"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+  "description": "",
+  "license": "MIT",
+  "scripts": {
+    "bundev": "bun --watch src/bot.js"
+  },
+  "type": "module"
 }
