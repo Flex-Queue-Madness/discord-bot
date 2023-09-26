@@ -5,16 +5,33 @@ const { BOT_NAME } = process.env
 
 const commandMeta = {
   commandName: 'plan',
-  commandDescription: 'Dieser Command generiert einen Wochenplan.'
+  commandDescription: 'Erstellt einen Wochenplan für die gegebene Kalenderwoche.',
+  commandArguments: [
+    {
+      argumentName: 'kalenderwoche',
+      argumentDescription: 'Nummer der zu planenden Woche.',
+      argumentRequired: true
+    }
+  ]
 }
 
 
 class Plan extends Command {
 
-  async execute (interaction) {
+  #baseMessage = `**Wochenplan für KW {{ week }}**\nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. ✅ setzt die komplette Woche auf verfügbar. 🧡\n_ _`
+
+
+  #buildMessage (interaction) {
 
     const week = interaction.options.getString('kalenderwoche')
-    const baseMessage = `**Wochenplan für KW ${week}**\nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. ✅ setzt die komplette Woche auf verfügbar. 🧡\n_ _`
+    return this.#baseMessage.replace('{{ week }}', week)
+
+  }
+
+
+  async execute (interaction) {
+
+    const baseMessage = this.#buildMessage(interaction)
 
     const results = {}
 

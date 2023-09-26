@@ -2,11 +2,13 @@ const {BOT_TOKEN, BOT_ID, RP_TYPE, RP_NAME, GUILD_ID} = process.env
 
 import { Client, GatewayIntentBits, Routes } from 'discord.js'
 import { REST } from '@discordjs/rest'
-import { SlashCommandBuilder } from '@discordjs/builders'
 
-import { plan } from './commands'
+import * as commands from './commands'
 
 const rest = new REST({ version: '10'}).setToken(BOT_TOKEN)
+
+
+
 
 
 const client = new Client({
@@ -27,9 +29,31 @@ const client = new Client({
 
 
 
-client.on('ready', () => {
-  console.log(`${client.user.tag} successfully logged in.`)
-})
+client.on('ready', () => { console.log(`${client.user.tag} successfully logged in.`) })
+
+
+
+
+
+const slashCommands = []
+
+for (const key in commands) {
+
+  const command = commands[key].buildCommand()
+  slashCommands.push(command.toJSON())
+
+}
+
+
+try {
+
+  await rest.put(Routes.applicationGuildCommands(BOT_ID, GUILD_ID), {
+    body: slashCommands
+  })
+
+} catch (error) { console.log(error) }
+
+
 
 
 
@@ -37,42 +61,11 @@ client.on('interactionCreate', async interaction => {
 
   if (!interaction.isChatInputCommand()) return
 
-  if (interaction.commandName === 'plan') {
-
-    plan.execute(interaction)
-
-  }
+  if (commands[interaction.commandName]) commands[interaction.commandName].execute(interaction)
 
 })
 
 
-
-const planCommand = new SlashCommandBuilder()
-  .setName('plan')
-  .setDescription('Erstelle einen Wochenplan')
-  .addStringOption(option =>
-    option
-      .setName('kalenderwoche')
-      .setDescription('Welche Kalenderwoche wird geplant?')
-      .setRequired(true)
-  )
-
-
-
-
-const commands = [
-  planCommand.toJSON()
-]
-
-
-
-try {
-
-  await rest.put(Routes.applicationGuildCommands(BOT_ID, GUILD_ID), {
-    body: commands
-  })
-
-} catch (error) { console.log(error) }
 
 
 
