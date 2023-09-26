@@ -4,7 +4,7 @@ import { Client, GatewayIntentBits, Routes } from 'discord.js'
 import { REST } from '@discordjs/rest'
 import { SlashCommandBuilder } from '@discordjs/builders'
 
-import { plan } from './commands/plan.js'
+import { plan } from './commands'
 
 const rest = new REST({ version: '10'}).setToken(BOT_TOKEN)
 
@@ -39,7 +39,7 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'plan') {
 
-    plan(interaction)
+    plan.execute(interaction)
 
   }
 

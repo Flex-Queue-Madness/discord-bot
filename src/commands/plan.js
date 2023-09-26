@@ -1,95 +1,110 @@
+import { Command } from '../command.class.js'
+
+
 const { BOT_NAME } = process.env
 
-
-export async function plan (interaction) {
-
-  const week = interaction.options.getString('kalenderwoche')
-  const baseMessage = `**Wochenplan für KW ${week}**\nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. ✅ setzt die komplette Woche auf verfügbar. 🧡\n_ _`
-
-  const results = {}
+const commandMeta = {
+  commandName: 'plan',
+  commandDescription: 'Dieser Command generiert einen Wochenplan.'
+}
 
 
-  const message = await interaction.reply({
-    content: baseMessage,
-    fetchReply: true
-  })
+class Plan extends Command {
 
-  const emojiMo = message.guild.emojis.cache.find(emoji => emoji.name === 'montag')
-  const emojiDi = message.guild.emojis.cache.find(emoji => emoji.name === 'dienstag')
-  const emojiMi = message.guild.emojis.cache.find(emoji => emoji.name === 'mittwoch')
-  const emojiDo = message.guild.emojis.cache.find(emoji => emoji.name === 'donnerstag')
-  const emojiFr = message.guild.emojis.cache.find(emoji => emoji.name === 'freitag')
-  const emojiSa = message.guild.emojis.cache.find(emoji => emoji.name === 'samstag')
-  const emojiSo = message.guild.emojis.cache.find(emoji => emoji.name === 'sonntag')
+  async execute (interaction) {
 
-  const tableHeader = `\n${emojiMo} ${emojiDi} ${emojiMi} ${emojiDo} ${emojiFr} ${emojiSa} ${emojiSo}\n`
+    const week = interaction.options.getString('kalenderwoche')
+    const baseMessage = `**Wochenplan für KW ${week}**\nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. ✅ setzt die komplette Woche auf verfügbar. 🧡\n_ _`
+
+    const results = {}
 
 
+    const message = await interaction.reply({
+      content: baseMessage,
+      fetchReply: true
+    })
 
-  message.react(emojiMo)
-  message.react(emojiDi)
-  message.react(emojiMi)
-  message.react(emojiDo)
-  message.react(emojiFr)
-  message.react(emojiSa)
-  message.react(emojiSo)
-  message.react('✅')
+    const emojiMo = message.guild.emojis.cache.find(emoji => emoji.name === 'montag')
+    const emojiDi = message.guild.emojis.cache.find(emoji => emoji.name === 'dienstag')
+    const emojiMi = message.guild.emojis.cache.find(emoji => emoji.name === 'mittwoch')
+    const emojiDo = message.guild.emojis.cache.find(emoji => emoji.name === 'donnerstag')
+    const emojiFr = message.guild.emojis.cache.find(emoji => emoji.name === 'freitag')
+    const emojiSa = message.guild.emojis.cache.find(emoji => emoji.name === 'samstag')
+    const emojiSo = message.guild.emojis.cache.find(emoji => emoji.name === 'sonntag')
+
+    const tableHeader = `\n${emojiMo} ${emojiDi} ${emojiMi} ${emojiDo} ${emojiFr} ${emojiSa} ${emojiSo}\n`
 
 
 
-  const collector = message.createReactionCollector({ dispose: true })
+    message.react(emojiMo)
+    message.react(emojiDi)
+    message.react(emojiMi)
+    message.react(emojiDo)
+    message.react(emojiFr)
+    message.react(emojiSa)
+    message.react(emojiSo)
+    message.react('✅')
 
 
 
-  collector.on('collect', (reaction, user) => {
-
-    if (user.tag === BOT_NAME) return
-
-    const player = user.tag.split('#')[0]
-    if (!results.hasOwnProperty(player)) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
-
-    if (reaction._emoji.name === ('montag')) { results[player][0] = '🟩' }
-    if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟩' }
-    if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟩' }
-    if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟩' }
-    if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟩' }
-    if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟩' }
-    if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟩' }
-
-    if (reaction._emoji.name === ('✅')) { results[player] = ['🟩','🟩','🟩','🟩','🟩','🟩','🟩'] }
-
-    let finalMessage = `${baseMessage}${tableHeader}`
-    for (const [key, value] of Object.entries(results)) {
-      finalMessage += `${value} – ${key}\n`
-    }
-
-    message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
-
-  })
+    const collector = message.createReactionCollector({ dispose: true })
 
 
 
-  collector.on('remove', (reaction, user) => {
+    collector.on('collect', (reaction, user) => {
 
-    const player = user.tag.split('#')[0]
+      if (user.tag === BOT_NAME) return
 
-    if (reaction._emoji.name === ('montag')) { results[player][0] = '🟥' }
-    if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟥' }
-    if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟥' }
-    if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟥' }
-    if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟥' }
-    if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟥' }
-    if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟥' }
+      const player = user.tag.split('#')[0]
+      if (!results.hasOwnProperty(player)) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
 
-    if (reaction._emoji.name === ('✅')) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
+      if (reaction._emoji.name === ('montag')) { results[player][0] = '🟩' }
+      if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟩' }
+      if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟩' }
+      if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟩' }
+      if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟩' }
+      if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟩' }
+      if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟩' }
 
-    let finalMessage = `${baseMessage}${tableHeader}`
-    for (const [key, value] of Object.entries(results)) {
-      finalMessage += `${value} – ${key}\n`
-    }
+      if (reaction._emoji.name === ('✅')) { results[player] = ['🟩','🟩','🟩','🟩','🟩','🟩','🟩'] }
 
-    message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
+      let finalMessage = `${baseMessage}${tableHeader}`
+      for (const [key, value] of Object.entries(results)) {
+        finalMessage += `${value} – ${key}\n`
+      }
 
-  })
+      message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
+
+    })
+
+
+
+    collector.on('remove', (reaction, user) => {
+
+      const player = user.tag.split('#')[0]
+
+      if (reaction._emoji.name === ('montag')) { results[player][0] = '🟥' }
+      if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟥' }
+      if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟥' }
+      if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟥' }
+      if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟥' }
+      if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟥' }
+      if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟥' }
+
+      if (reaction._emoji.name === ('✅')) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
+
+      let finalMessage = `${baseMessage}${tableHeader}`
+      for (const [key, value] of Object.entries(results)) {
+        finalMessage += `${value} – ${key}\n`
+      }
+
+      message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
+
+    })
+
+  }
 
 }
+
+
+export const plan = new Plan (commandMeta)
