@@ -3,4 +3,5 @@
  *  export * from './YOUR_COMMAND.js'
  */
 
+export * from './help'
 export * from './plan'
