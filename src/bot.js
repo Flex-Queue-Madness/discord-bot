@@ -51,7 +51,8 @@ try {
     body: slashCommands
   })
 
-} catch (error) { console.log(error) }
+}
+catch (error) { console.log(error) }
 
 
 
@@ -61,7 +62,16 @@ client.on('interactionCreate', async interaction => {
 
   if (!interaction.isChatInputCommand()) return
 
-  if (commands[interaction.commandName]) commands[interaction.commandName].execute(interaction)
+  const key = interaction.commandName
+  if (commands[key]) {
+    try { return await commands[key].execute(interaction) }
+    catch (error) {
+      console.log(error)
+      return interaction.reply('Command konnte nicht ausgeführt werden.')
+    }
+  }
+
+  return interaction.reply('Command nicht gefunden.')
 
 })
 
