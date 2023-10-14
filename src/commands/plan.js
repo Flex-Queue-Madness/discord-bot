@@ -6,118 +6,88 @@ const { BOT_NAME } = process.env
 const commandMeta = {
   commandName: 'plan',
   commandDescription: 'Erstellt einen Wochenplan für die gegebene Kalenderwoche.',
-  commandArguments: [
-    {
-      argumentName: 'kalenderwoche',
-      argumentDescription: 'Nummer der zu planenden Woche.',
-      argumentRequired: true
-    }
-  ]
+  commandArguments: []
 }
 
 
 class Plan extends Command {
 
-  #baseMessage = `**Wochenplan für KW {{ week }}**\nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. ✅ setzt die komplette Woche auf verfügbar. 🧡\n_ _`
+  #baseMessage = `# Wochenplan \nBitte tragt eure Verfügbarkeiten von Montag bis Sonntag unten ein. 🧡`
+  #reactionEmojis = ['<:montag:1069195713797439578>', '<:dienstag:1069195704683212822>', '<:mittwoch:1069195711876444170>', '<:donnerstag:1069195706516123679>', '<:freitag:1069195709213069382>', '<:samstag:1069195716402089984>', '<:sonntag:1069195717874307183>']
 
 
-  #buildMessage (interaction) {
+  #buildMessage (hasResults=false, results) {
 
-    const week = interaction.options.getString('kalenderwoche')
-    return this.#baseMessage.replace('{{ week }}', week)
+    if (!hasResults) return this.#baseMessage
+
+    let resultsHeader = '\n\n'
+    for (const emoji of this.#reactionEmojis) {
+      resultsHeader += `${emoji} `
+    }
+
+    let resultsMessage = `${this.#baseMessage}${resultsHeader}\n`
+    for (const [key, value] of Object.entries(results)) {
+      resultsMessage += `${value} – ${key}\n`
+    }
+
+    return resultsMessage.replaceAll(',', ' ')
+
+  }
+
+
+  #addVoteReactions (message) { return this.#reactionEmojis.forEach(emoji => message.react(emoji)) }
+
+
+  #processVotes (reaction, user, results, add=true) {
+
+    if (user.tag === BOT_NAME) return
+
+    const player  = user.tag.split('#')[0]
+
+    if (!results.hasOwnProperty(player)) {
+      results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥']
+    }
+
+    if (reaction._emoji.name === ('montag'))     { results[player][0] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('dienstag'))   { results[player][1] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('mittwoch'))   { results[player][2] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('donnerstag')) { results[player][3] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('freitag'))    { results[player][4] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('samstag'))    { results[player][5] = add ? '🟩' : '🟥' }
+    if (reaction._emoji.name === ('sonntag'))    { results[player][6] = add ? '🟩' : '🟥' }
+
+  }
+
+
+  #updatePlan (reaction, user, results, message, add=true) {
+
+    if (user.tag === BOT_NAME) return
+
+    this.#processVotes(reaction, user, results, add)
+
+    const resultsMessage = this.#buildMessage(true, results)
+    return message.edit(`${resultsMessage}\n`)
 
   }
 
 
   async execute (interaction) {
 
-    const baseMessage = this.#buildMessage(interaction)
-
-    const results = {}
-
+    const baseMessage = this.#buildMessage()
 
     const message = await interaction.reply({
       content: baseMessage,
       fetchReply: true
     })
 
-    const emojiMo = message.guild.emojis.cache.find(emoji => emoji.name === 'montag')
-    const emojiDi = message.guild.emojis.cache.find(emoji => emoji.name === 'dienstag')
-    const emojiMi = message.guild.emojis.cache.find(emoji => emoji.name === 'mittwoch')
-    const emojiDo = message.guild.emojis.cache.find(emoji => emoji.name === 'donnerstag')
-    const emojiFr = message.guild.emojis.cache.find(emoji => emoji.name === 'freitag')
-    const emojiSa = message.guild.emojis.cache.find(emoji => emoji.name === 'samstag')
-    const emojiSo = message.guild.emojis.cache.find(emoji => emoji.name === 'sonntag')
-
-    const tableHeader = `\n${emojiMo} ${emojiDi} ${emojiMi} ${emojiDo} ${emojiFr} ${emojiSa} ${emojiSo}\n`
-
-
-
-    message.react(emojiMo)
-    message.react(emojiDi)
-    message.react(emojiMi)
-    message.react(emojiDo)
-    message.react(emojiFr)
-    message.react(emojiSa)
-    message.react(emojiSo)
-    message.react('✅')
-
+    this.#addVoteReactions(message)
 
 
     const collector = message.createReactionCollector({ dispose: true })
+    const results   = {}
 
-
-
-    collector.on('collect', (reaction, user) => {
-
-      if (user.tag === BOT_NAME) return
-
-      const player = user.tag.split('#')[0]
-      if (!results.hasOwnProperty(player)) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
-
-      if (reaction._emoji.name === ('montag')) { results[player][0] = '🟩' }
-      if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟩' }
-      if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟩' }
-      if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟩' }
-      if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟩' }
-      if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟩' }
-      if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟩' }
-
-      if (reaction._emoji.name === ('✅')) { results[player] = ['🟩','🟩','🟩','🟩','🟩','🟩','🟩'] }
-
-      let finalMessage = `${baseMessage}${tableHeader}`
-      for (const [key, value] of Object.entries(results)) {
-        finalMessage += `${value} – ${key}\n`
-      }
-
-      message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
-
-    })
-
-
-
-    collector.on('remove', (reaction, user) => {
-
-      const player = user.tag.split('#')[0]
-
-      if (reaction._emoji.name === ('montag')) { results[player][0] = '🟥' }
-      if (reaction._emoji.name === ('dienstag')) { results[player][1] = '🟥' }
-      if (reaction._emoji.name === ('mittwoch')) { results[player][2] = '🟥' }
-      if (reaction._emoji.name === ('donnerstag')) { results[player][3] = '🟥' }
-      if (reaction._emoji.name === ('freitag')) { results[player][4] = '🟥' }
-      if (reaction._emoji.name === ('samstag')) { results[player][5] = '🟥' }
-      if (reaction._emoji.name === ('sonntag')) { results[player][6] = '🟥' }
-
-      if (reaction._emoji.name === ('✅')) { results[player] = ['🟥','🟥','🟥','🟥','🟥','🟥','🟥'] }
-
-      let finalMessage = `${baseMessage}${tableHeader}`
-      for (const [key, value] of Object.entries(results)) {
-        finalMessage += `${value} – ${key}\n`
-      }
-
-      message.edit(`${finalMessage.replaceAll(',', ' ')}\n_ _`)
-
-    })
+    collector.on('collect', (reaction, user) => this.#updatePlan(reaction, user, results, message, true))
+    collector.on('remove', (reaction, user) => this.#updatePlan(reaction, user, results, message, false))
 
   }
 
