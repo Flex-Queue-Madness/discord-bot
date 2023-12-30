@@ -5,3 +5,4 @@
 
 export * from './help'
 export * from './plan'
+export * from './activity'
