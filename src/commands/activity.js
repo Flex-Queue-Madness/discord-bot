@@ -28,18 +28,31 @@ class Activity extends Command {
     const type   = interaction.options.getString('type')
     const status = interaction.options.getString('status')
 
-    return interaction.client.user.setPresence({
-      activities: [{ name: status, type: +type }],
-      status: 'online',
-    })
+    try {
+
+      interaction.client.user.setPresence({
+        activities: [{ name: status, type: +type }],
+        status: 'online',
+      })
+
+      return true
+
+    } catch (error) {
+
+      console.log(error)
+      return false
+
+    }
 
   }
 
 
   async execute (interaction) {
 
-    this.#setActivity(interaction)
-    return interaction.reply({content: 'Status updated', ephemeral: true})
+    const newActivity = this.#setActivity(interaction)
+    const reply = newActivity ? 'Neuer Status gesetzt' : 'Da ist etwas schief gelaufen...'
+
+    return interaction.reply({content: reply, ephemeral: true})
 
   }
 
